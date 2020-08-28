@@ -24,7 +24,7 @@ String filePath = args[3];
 
 HashMap<String, Integer> counts = new HashMap<>();
 
-ArrayList<String> lines = readFile(filePath);
+String lines = readFile(filePath);
 lines = putTokens(lines);
 lines = computeNGrams(lines, n, hm);
 printCounts(counts, k, part);
@@ -66,10 +66,19 @@ public static void count(HashMap<String, Integer> counts, int k, int part){
 * This method reads the file for the corpus
 * Parameters:
 * String path: Stores the file path of the input text file
-* Returns the text file as an ArrayList<String> of the text file
+* Returns the text file as a String
 */
-public ArrayList<String> readFile(String path){
+public String readFile(String path){
+  try{
+    BufferedReader br = new BufferedReader(new FileReader(path));
+    StringBuilder lines = new StringBuilder();
+    String line = br.readLine();
 
+    while(line != null)
+      lines.append(line);
+}
+  catch(Exception e){ throw FileNotFoundException;}
+  return lines.toString();
 }
 
 
