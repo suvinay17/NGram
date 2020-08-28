@@ -22,12 +22,10 @@ int k = Integer.parseInt(args[1]);
 int n = Integer.parseInt(args[2]);
 String filePath = args[3];
 
-HashMap<String, Integer> counts = new HashMap<>();
-
 String lines = readFile(filePath);
 lines = putTokens(lines);
-lines = computeNGrams(lines, n, hm);
-printCounts(counts, k, part);
+HashMap<String, Integer> counts = getCounts(lines, n);
+printResults(counts, k, part);
 }
 
 /*
@@ -37,7 +35,7 @@ printCounts(counts, k, part);
 *int k: the top k frequent counts/ probabilities to be output
 *int part: the question part (decides to output probability or count)
 */
-public static void count(HashMap<String, Integer> counts, int k, int part){
+public static void printResults(HashMap<String, Integer> counts, int k, int part){
   String a, b;
   Double prob;
   PriorityQueue<String> top = new PriorityQueue<>((x, y) -> ( y.getValue() - x.getValue())); // Comparator based on counts
@@ -83,7 +81,7 @@ public String readFile(String path){
 
 
 /*
-* This method put start and end of line tokens into the corpus string using regex
+* This method puts start and end of line tokens into the corpus string using regex
 * Parameters:
 * String lines: stores the string read from input file
 * Returns the String with start and end tokens added.
@@ -98,6 +96,33 @@ public String putTokens(String lines){
     sb.append(" |");
   }
   return sb.toString();
+}
+
+
+/*
+* This method computes the counts for all occurences of words, part-sentences, and sentences
+* Parameters:
+* String lines: stores the string read from input file with beginning and end tokens
+* int n: to set the n in ngram model
+* Returns HashMap<String, Integer> counts, with counts of words, part-sentences, and sentences.
+*/
+public HashMap<String, Integer> getCounts(String lines, int n){
+  StringBuilder sb = new StringBuillder();
+  HashMap<String, Integer> counts = new HashMap<>();
+  String x;
+  sb.append("~ ");
+  String[] words = lines.split("// ");
+  for(int i = 1; i < words.length; i++){
+    words[i] = words[i].trim();
+    sb.append(words[i]);
+    x = sb.toString()
+    counts.put(words[i] , counts.getOrDefault(words[i], 0) + 1);
+    counts.put(x , counts.getOrDefault(x, 0) + 1);
+    sb.append(" ");
+    if(words[i] == "|")
+      sb = new StringBuilder();
+  }
+  return counts;
 }
 
 
