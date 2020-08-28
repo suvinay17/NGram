@@ -12,6 +12,7 @@ public class ngrams{
 * Command Line input :
 * int part: the question number, int k: k most frequent counts/elements needed
 * int n : specifies n grams, String filePath: specifies the file path to be read.
+* String token: Input token for which we are calculating n-gram
 * This method is the driver function and calls all other methods that compute N grams.
 */
 
@@ -21,21 +22,23 @@ int part = Integer.parseInt(args[0]);
 int k = Integer.parseInt(args[1]);
 int n = Integer.parseInt(args[2]);
 String filePath = args[3];
+String token = args[4];
 
 String lines = readFile(filePath);
 lines = putTokens(lines);
 HashMap<String, Integer> counts = getCounts(lines, n);
-printResults(counts, k, part);
+printResults(counts, k, part, token);
 }
 
 /*
-*This method prints the counts or the probability of the k most frequent words
-*Parmaters:
-*HashMap<String,Integer> count: stores the counts of each token or merged tokens(String) based on n(Integer)gram model
-*int k: the top k frequent counts/ probabilities to be output
-*int part: the question part (decides to output probability or count)
+* This method prints the counts or the probability of the k most frequent words
+* Parmaters:
+* HashMap<String,Integer> count: stores the counts of each token or merged tokens(String) based on n(Integer)gram model
+* int k: the top k frequent counts/ probabilities to be output
+* int part: the question part (decides to output probability or count)
+* String token: Input token for which we are calculating n-gram
 */
-public static void printResults(HashMap<String, Integer> counts, int k, int part){
+public static void printResults(HashMap<String, Integer> counts, int k, int part, String token){
   String a, b;
   Double prob;
   PriorityQueue<String> top = new PriorityQueue<>((x, y) -> ( y.getValue() - x.getValue())); // Comparator based on counts
@@ -67,6 +70,7 @@ public static void printResults(HashMap<String, Integer> counts, int k, int part
 * Returns the text file as a String
 */
 public String readFile(String path){
+
   try{
     BufferedReader br = new BufferedReader(new FileReader(path));
     StringBuilder lines = new StringBuilder();
@@ -87,15 +91,16 @@ public String readFile(String path){
 * Returns the String with start and end tokens added.
 */
 public String putTokens(String lines){
+
   StringBuilder sb = new StringBuilder();
   String[] sentences = lines.split("//[.!?]");
   for(String s : sentences){
     s.trim();
-    sb.append("~ ");
+    sb.append("<s> ");
     sb.append(s);
-    sb.append(" |");
+    sb.append(" </s> ");
   }
-  return sb.toString();
+  return sb.toString().trim();
 }
 
 
@@ -107,22 +112,33 @@ public String putTokens(String lines){
 * Returns HashMap<String, Integer> counts, with counts of words, part-sentences, and sentences.
 */
 public HashMap<String, Integer> getCounts(String lines, int n){
+
   StringBuilder sb = new StringBuillder();
   HashMap<String, Integer> counts = new HashMap<>();
   String x;
-  sb.append("~ ");
+  sb.append("<s> ");
   String[] words = lines.split("// ");
-  for(int i = 1; i < words.length; i++){
-    words[i] = words[i].trim();
-    sb.append(words[i]);
-    x = sb.toString()
-    counts.put(words[i] , counts.getOrDefault(words[i], 0) + 1);
-    counts.put(x , counts.getOrDefault(x, 0) + 1);
-    sb.append(" ");
-    if(words[i] == "|")
-      sb = new StringBuilder();
+  if(words.length > 1){
+    for(int i = 1; i < words.length; i++){
+      words[i] = words[i].trim();
+      sb.append(words[i]);
+      x = sb.toString()
+      counts.put(words[i] , counts.getOrDefault(words[i], 0) + 1);
+      counts.put(x , counts.getOrDefault(x, 0) + 1);
+      sb.append(" ");
+      if(words[i].equals("</s>"))
+        sb = new StringBuilder();
+      if(i == words.length - 1 && !words[i].equals("</s>")){ // edge case end of sentence
+        counts.put("</s>" , counts.getOrDefault(words[i], 0) + 1);
+        counts.put(x + "</s>" , counts.getOrDefault(words[i], 0) + 1);
+      }
+
   }
   return counts;
+}
+  else if(word.length == 1){return "<s>"+word[0]+"</s>";} //edge case
+  else
+    return "";
 }
 
 
