@@ -82,5 +82,24 @@ public String readFile(String path){
 }
 
 
+/*
+* This method put start and end of line tokens into the corpus string using regex
+* Parameters:
+* String lines: stores the string read from input file
+* Returns the String with start and end tokens added.
+*/
+public String putTokens(String lines){
+  StringBuilder sb = new StringBuilder();
+  String[] sentences = lines.split("//[.!?]");
+  for(String s : sentences){
+    s.trim();
+    sb.append("~ ");
+    sb.append(s);
+    sb.append(" |");
+  }
+  return sb.toString();
+}
+
+
 
 }
