@@ -23,11 +23,13 @@ int k = Integer.parseInt(args[1]);
 int n = Integer.parseInt(args[2]);
 String filePath = args[3];
 String token = args[4];
+String history = args[5];
+String hist[] = history.split("//s");
 
 String lines = readFile(filePath);
 lines = putTokens(lines);
 HashMap<String, Integer> counts = getCounts(lines, n);
-printResults(counts, k, part, token);
+printResults(counts, n, k, part, token, hist);
 }
 
 /*
@@ -38,28 +40,42 @@ printResults(counts, k, part, token);
 * int part: the question part (decides to output probability or count)
 * String token: Input token for which we are calculating n-gram
 */
-public static void printResults(HashMap<String, Integer> counts, int k, int part, String token){
+public static void printResults(HashMap<String, Integer> counts,int n, int k, int part, String token, String[] hist){
   String a, b;
   Double prob;
   PriorityQueue<String> top = new PriorityQueue<>((x, y) -> ( y.getValue() - x.getValue())); // Comparator based on counts
+  PriorityQueue<String> topbi = new PriorityQueue<>((x, y) -> ( y.getValue() - x.getValue()));
 
-  for(Map.Entry<String, Integer> x: counts.entrySet()) //iterating through map to put things into priority queue
+  for(Map.Entry<String, Integer> x: counts.entrySet()){ //iterating through map to put things into priority queue
      top.offer(x.getKey());
+     topbi.offer(x.getKey());
+   }
 
   if(part == 1){ // Programming part q1.
+     System.out.println("unigrams: ");
      for(int i = 0 ; i < k; i++){
        a = top.poll() // using PriorityQueue to get top k elements efficiently
        System.out.println("Word: "+a+" Count: "+counts.get(a));
      }
+     System.out.println("bigrams: ");
+     //implement
+   }
+   int f = -1;
+   double g = 0;
+   if(part == 2 || part == 3){
+       for(int i = 0; i < hist.length; i++){
+          if(hist[i].equals(token))
+            f = i;
+       }
+   if(f == -1)
+    System.out.println("Token not found in corpus");
+  else
+    g = calculateNGRAM(f, token, history, n, 1.0, counts);
+  System.out.println(n+" gram probability : "+ g );
+      }
+
    }
 
-   if(part == 2 || part == 3){
-     for(int i = 0 ; i < k; i++){
-       a = top.poll()
-       b = getPreviousTokens(a,n);
-       prob = (counts.get(a) * counts.get(b)) / counts.get(b));
-       System.out.println("P( "+ a +" | "+ b +" )"+" = "+ prob);
-   }
 }
 
 
@@ -69,7 +85,7 @@ public static void printResults(HashMap<String, Integer> counts, int k, int part
 * String path: Stores the file path of the input text file
 * Returns the text file as a String
 */
-public String readFile(String path){
+public static String readFile(String path){
 
   try{
     BufferedReader br = new BufferedReader(new FileReader(path));
@@ -90,10 +106,10 @@ public String readFile(String path){
 * String lines: stores the string read from input file
 * Returns the String with start and end tokens added.
 */
-public String putTokens(String lines){
+public static String putTokens(String lines){
 
   StringBuilder sb = new StringBuilder();
-  String[] sentences = lines.split("//[.!?]");
+  String[] sentences = lines.split("[.!?]");
   for(String s : sentences){
     s.trim();
     sb.append("<s> ");
@@ -111,13 +127,14 @@ public String putTokens(String lines){
 * int n: to set the n in ngram model
 * Returns HashMap<String, Integer> counts, with counts of words, part-sentences, and sentences.
 */
-public HashMap<String, Integer> getCounts(String lines, int n){
+public static HashMap<String, Integer> getCounts(String lines, int n){
 
   StringBuilder sb = new StringBuillder();
   HashMap<String, Integer> counts = new HashMap<>();
   String x;
   sb.append("<s> ");
   String[] words = lines.split("// ");
+
   if(words.length > 1){
     for(int i = 1; i < words.length; i++){
       words[i] = words[i].trim();
@@ -136,9 +153,31 @@ public HashMap<String, Integer> getCounts(String lines, int n){
   }
   return counts;
 }
+
   else if(word.length == 1){return "<s>"+word[0]+"</s>";} //edge case
+
   else
     return "";
+}
+
+
+private static double calculateNGRAM(int f, String[] hist, String token, int n, double prob, HashMap<String, Integer> counts){
+  if(f == 0)
+    return prob;
+    StringBuilder sb = new StringBuilder();
+    for(int i = 0 + n; i < f; i++){
+      sb.append(hist[i]);
+      sb.append(" ");
+    }
+    double c = counts.getOrDefault(sb.toString(), 0));
+    double z = counts.getOrDefault(token);
+    if(c == 0.0 || z == 0.0)
+      return 0;
+    else
+      prob *= z / (c);
+    }
+  calculateNGRAM(--f, hist, token, n, prob, counts);
+
 }
 
 
