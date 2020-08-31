@@ -41,14 +41,18 @@ printResults(counts, n, k, part, token, hist);
 * String token: Input token for which we are calculating n-gram
 */
 public static void printResults(HashMap<String, Integer> counts,int n, int k, int part, String token, String[] hist){
-  String a, b;
+  String a;
   Double prob;
   PriorityQueue<String> top = new PriorityQueue<>((x, y) -> ( y.getValue() - x.getValue())); // Comparator based on counts
   PriorityQueue<String> topbi = new PriorityQueue<>((x, y) -> ( y.getValue() - x.getValue()));
 
   for(Map.Entry<String, Integer> x: counts.entrySet()){ //iterating through map to put things into priority queue
-     top.offer(x.getKey());
-     topbi.offer(x.getKey());
+     String s = x.getKey();
+     String m[] = s.split("//s");
+     if(m.length == 1)
+      top.offer(x.getKey());
+     if(m.length == 2)
+      topbi.offer(x.getKey());
    }
 
   if(part == 1){ // Programming part q1.
@@ -58,25 +62,21 @@ public static void printResults(HashMap<String, Integer> counts,int n, int k, in
        System.out.println("Word: "+a+" Count: "+counts.get(a));
      }
      System.out.println("bigrams: ");
-     //implement
+     for(int i = 0 ; i < k; i++){
+       a = topbi.poll(); // using PriorityQueue to get top k elements efficiently
+       System.out.println("Word: "+a+" Count: "+counts.get(a));
+     }
    }
-   int f = -1;
+
    double g = 0;
    if(part == 2 || part == 3){
-       for(int i = 0; i < hist.length; i++){
-          if(hist[i].equals(token))
-            f = i;
-       }
-   if(f == -1)
-    System.out.println("Token not found in corpus");
-  else
-    g = calculateNGRAM(f, token, history, n, 1.0, counts);
-  System.out.println(n+" gram probability : "+ g );
-      }
+     g = calculateNGRAM(token, history, n, 1.0, counts);
+     System.out.println(n+" gram probability : "+ g );
+    }
 
-   }
+  }
 
-}
+
 
 
 /*
@@ -154,16 +154,23 @@ public static HashMap<String, Integer> getCounts(String lines, int n){
   return counts;
 }
 
-  else if(word.length == 1){return "<s>"+word[0]+"</s>";} //edge case
+  else if(word.length == 1){return "<s>" + word[0] + "</s>";} //edge case
 
   else
     return "";
 }
 
 
-private static double calculateNGRAM(int f, String[] hist, String token, int n, double prob, HashMap<String, Integer> counts){
-  if(f == 0)
-    return prob;
+/*
+* This private method calculates NGRAM probabilities
+* Input:
+* String []hist : contains the history of the token
+* int n : n in ngrams
+* double prob: stores the ngram probability of that tokens
+* HashMap<String, Integer> counts : stores the counts of each token or merged tokens(String) based on n(Integer)gram model
+* Returns (recursively): double prob the ngram probability of the token given the history
+*/
+private static double calculateNGRAM(String[] hist, String token, int n, double prob, HashMap<String, Integer> counts){
     StringBuilder sb = new StringBuilder();
     for(int i = 0 + n; i < f; i++){
       sb.append(hist[i]);
@@ -171,12 +178,9 @@ private static double calculateNGRAM(int f, String[] hist, String token, int n, 
     }
     double c = counts.getOrDefault(sb.toString(), 0));
     double z = counts.getOrDefault(token);
-    if(c == 0.0 || z == 0.0)
-      return 0;
-    else
-      prob *= z / (c);
+      prob += Math.log(z /(c));
     }
-  calculateNGRAM(--f, hist, token, n, prob, counts);
+  calculateNGRAM(hist, token, n, prob, counts);
 
 }
 
