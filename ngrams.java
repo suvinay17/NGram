@@ -26,7 +26,14 @@ int n = Integer.parseInt(args[2]);
 n--;
 String filePath = args[3];
 String token = args[4];
-String history = args[5];
+String his[] = args[5].split(",");
+StringBuilder sb = new StringBuilder();
+for(int i = 0; i < his.length; i++){
+   sb.append(his[i]);
+   if(i != his.length - 1)
+    sb.append(" ");
+}
+String history = sb.toString();
 
 ArrayList<String> lines = readFile(filePath);
 ArrayList<String> line = putTokens(lines);
@@ -93,8 +100,11 @@ public static ArrayList<String> readFile(String path){
   try{
     BufferedReader br = new BufferedReader(new FileReader(path));
     String line;
-    while( (line = br.readLine()) != null)
+    while( (line = br.readLine()) != null){
+      line = new String(line.getBytes(), "UTF-8"); //making sure the line is UTF-8
+      line = line.replace("\uFEFF", ""); // dealing with BOM
       lines.add(line);
+    }
 }
   catch(Exception e){ System.out.print(" File not found/IOExcetption. Please run the program with a correct file path. Please ignore any other output in thus run");}
   return lines;
@@ -142,7 +152,7 @@ public static HashMap<String, Integer> getCounts(ArrayList<String> lines, int n)
       sb.append(words[i]);
       sb.append(" ");
       for(int j = i + 1; (j <= b + n ) && (j < words.length) ; j++){
-        sb.append(words[j]);
+        sb.append(words[j].trim());
         x = sb.toString();
         counts.put(x , counts.getOrDefault(x, 0) + 1);
         sb.append(" ");
@@ -173,6 +183,9 @@ private static double calculateNGRAM(String hist, String token, int n, double pr
         sb.append(history[i]);
         sb.append(" ");
       }
+      int a = counts.getOrDefault(token,0);
+      int b = counts.getOrDefault(sb.toString().trim(), 0);
+      if(a == 0 || b == 0) return 0;
       return Math.log(counts.getOrDefault(token,0)/(counts.getOrDefault(sb.toString().trim(), 0)));
     }
 
