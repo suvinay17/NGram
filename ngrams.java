@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileNotFoundException;
 public class ngrams{
 
 /*
@@ -21,15 +23,15 @@ public static void main(String args[]){
 int part = Integer.parseInt(args[0]);
 int k = Integer.parseInt(args[1]);
 int n = Integer.parseInt(args[2]);
+n--;
 String filePath = args[3];
 String token = args[4];
 String history = args[5];
-String hist[] = history.split("//s");
 
-String lines = readFile(filePath);
-lines = putTokens(lines);
-HashMap<String, Integer> counts = getCounts(lines, n);
-printResults(counts, n, k, part, token, hist);
+ArrayList<String> lines = readFile(filePath);
+ArrayList<String> line = putTokens(lines);
+HashMap<String, Integer> counts = getCounts(line, n);
+printResults(counts, n, k, part, token, history);
 }
 
 /*
@@ -40,15 +42,15 @@ printResults(counts, n, k, part, token, hist);
 * int part: the question part (decides to output probability or count)
 * String token: Input token for which we are calculating n-gram
 */
-public static void printResults(HashMap<String, Integer> counts,int n, int k, int part, String token, String[] hist){
+public static void printResults(HashMap<String, Integer> counts,int n, int k, int part, String token, String hist){
   String a;
   Double prob;
-  PriorityQueue<String> top = new PriorityQueue<>((x, y) -> ( y.getValue() - x.getValue())); // Comparator based on counts
-  PriorityQueue<String> topbi = new PriorityQueue<>((x, y) -> ( y.getValue() - x.getValue()));
+  PriorityQueue<String> top = new PriorityQueue<>((x, y) -> ( counts.get(y) - counts.get(x) )); // Comparator based on counts
+  PriorityQueue<String> topbi = new PriorityQueue<>((x, y) -> ( counts.get(y) - counts.get(x) ));
 
   for(Map.Entry<String, Integer> x: counts.entrySet()){ //iterating through map to put things into priority queue
      String s = x.getKey();
-     String m[] = s.split("//s");
+     String m[] = s.split(" ");
      if(m.length == 1)
       top.offer(x.getKey());
      if(m.length == 2)
@@ -58,7 +60,7 @@ public static void printResults(HashMap<String, Integer> counts,int n, int k, in
   if(part == 1){ // Programming part q1.
      System.out.println("unigrams: ");
      for(int i = 0 ; i < k; i++){
-       a = top.poll() // using PriorityQueue to get top k elements efficiently
+       a = top.poll(); // using PriorityQueue to get top k elements efficiently
        System.out.println("Word: "+a+" Count: "+counts.get(a));
      }
      System.out.println("bigrams: ");
@@ -70,7 +72,7 @@ public static void printResults(HashMap<String, Integer> counts,int n, int k, in
 
    double g = 0;
    if(part == 2 || part == 3){
-     g = calculateNGRAM(token, history, n, 1.0, counts);
+     g = calculateNGRAM(token, hist, n, 1.0, counts);
      System.out.println(n+" gram probability : "+ g );
     }
 
@@ -85,18 +87,17 @@ public static void printResults(HashMap<String, Integer> counts,int n, int k, in
 * String path: Stores the file path of the input text file
 * Returns the text file as a String
 */
-public static String readFile(String path){
+public static ArrayList<String> readFile(String path){
 
+  ArrayList<String> lines = new ArrayList<String>();
   try{
     BufferedReader br = new BufferedReader(new FileReader(path));
-    StringBuilder lines = new StringBuilder();
-    String line = br.readLine();
-
-    while(line != null)
-      lines.append(line);
+    String line;
+    while( (line = br.readLine()) != null)
+      lines.add(line);
 }
-  catch(Exception e){ throw FileNotFoundException;}
-  return lines.toString();
+  catch(Exception e){ System.out.print(" File not found/IOExcetption. Please run the program with a correct file path. Please ignore any other output in thus run");}
+  return lines;
 }
 
 
@@ -106,17 +107,15 @@ public static String readFile(String path){
 * String lines: stores the string read from input file
 * Returns the String with start and end tokens added.
 */
-public static String putTokens(String lines){
-
-  StringBuilder sb = new StringBuilder();
-  String[] sentences = lines.split("[.!?]");
-  for(String s : sentences){
-    s.trim();
+public static ArrayList<String> putTokens(ArrayList<String> lines){
+  for(int i = 0; i < lines.size(); i++){
+    StringBuilder sb = new StringBuilder();
     sb.append("<s> ");
-    sb.append(s);
+    sb.append(lines.get(i).trim());
     sb.append(" </s> ");
+    lines.set(i, sb.toString());
   }
-  return sb.toString().trim();
+  return lines;
 }
 
 
@@ -127,63 +126,54 @@ public static String putTokens(String lines){
 * int n: to set the n in ngram model
 * Returns HashMap<String, Integer> counts, with counts of words, part-sentences, and sentences.
 */
-public static HashMap<String, Integer> getCounts(String lines, int n){
+public static HashMap<String, Integer> getCounts(ArrayList<String> lines, int n){
 
-  StringBuilder sb = new StringBuillder();
+  StringBuilder sb = new StringBuilder(); //String builder for efficient String building since Strings are immutable in java
   HashMap<String, Integer> counts = new HashMap<>();
   String x;
-  sb.append("<s> ");
-  String[] words = lines.split("// ");
-
-  if(words.length > 1){
-    for(int i = 1; i < words.length; i++){
+  int b = 0;
+  for(String line: lines){
+    System.out.println(line);
+    String[] words = line.split(" ");
+    for(int i = 0; i < words.length; i++){
       words[i] = words[i].trim();
-      sb.append(words[i]);
-      x = sb.toString()
       counts.put(words[i] , counts.getOrDefault(words[i], 0) + 1);
-      counts.put(x , counts.getOrDefault(x, 0) + 1);
+      b = i;
+      sb.append(words[i]);
       sb.append(" ");
-      if(words[i].equals("</s>"))
-        sb = new StringBuilder();
-      if(i == words.length - 1 && !words[i].equals("</s>")){ // edge case end of sentence
-        counts.put("</s>" , counts.getOrDefault(words[i], 0) + 1);
-        counts.put(x + "</s>" , counts.getOrDefault(words[i], 0) + 1);
-      }
-
+      for(int j = i + 1; (j <= b + n ) && (j < words.length) ; j++){
+        sb.append(words[j]);
+        x = sb.toString();
+        counts.put(x , counts.getOrDefault(x, 0) + 1);
+        sb.append(" ");
+        if(words[i].equals("</s>"))
+          sb = new StringBuilder();
+        }
+      sb = new StringBuilder();
   }
-  return counts;
 }
-
-  else if(word.length == 1){return "<s>" + word[0] + "</s>";} //edge case
-
-  else
-    return "";
+  return counts;
 }
 
 
 /*
 * This private method calculates NGRAM probabilities
 * Input:
-* String []hist : contains the history of the token
+* String hist : contains the history of the token
 * int n : n in ngrams
 * double prob: stores the ngram probability of that tokens
 * HashMap<String, Integer> counts : stores the counts of each token or merged tokens(String) based on n(Integer)gram model
-* Returns (recursively): double prob the ngram probability of the token given the history
+* Returns : double prob the ngram probability of the token given the history
 */
-private static double calculateNGRAM(String[] hist, String token, int n, double prob, HashMap<String, Integer> counts){
-    StringBuilder sb = new StringBuilder();
-    for(int i = 0 + n; i < f; i++){
-      sb.append(hist[i]);
-      sb.append(" ");
+private static double calculateNGRAM(String hist, String token, int n, double prob, HashMap<String, Integer> counts){
+      hist = hist.trim(); //cleaning up for edge cases
+      String history[] = hist.split(" "); //split tokens based on space
+      StringBuilder sb = new StringBuilder(); // StringBuilder for efficient concatenation
+      for(int i = history.length - n; (i >= 0) && (i < history.length); i--){
+        sb.append(history[i]);
+        sb.append(" ");
+      }
+      return Math.log(counts.getOrDefault(token,0)/(counts.getOrDefault(sb.toString().trim(), 0)));
     }
-    double c = counts.getOrDefault(sb.toString(), 0));
-    double z = counts.getOrDefault(token);
-      prob += Math.log(z /(c));
-    }
-  calculateNGRAM(hist, token, n, prob, counts);
-
-}
-
-
 
 }
