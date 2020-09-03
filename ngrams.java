@@ -1,4 +1,4 @@
-/* Class written by Suvinay Bothra on August 28th to compute ngram probabilities to predict the next word
+/* Class written by Suvinay Bothra on August 28th to compute ngram probabilities to 
 * Assignment for cmsc395 (NLP) by Dr. Park
 */
 import java.util.ArrayList;
@@ -20,25 +20,20 @@ public class ngrams{
 
 public static void main(String args[]){
 
-int part = Integer.parseInt(args[0]);
-int k = Integer.parseInt(args[1]);
-int n = Integer.parseInt(args[2]);
+int part = Integer.parseInt(args[0]); // question part
+int k = (part == 4) ? 20 : 10; // sets the top k elements to return change this to change output
+if(part > 4) {System.out.println(" Please re-run the program with valid part number [1-4], ignore any output in this run");}
+int n = Integer.parseInt(args[1]); // n in n-grams
 n--;
-String filePath = args[3];
-String token = args[4];
-String his[] = args[5].split(",");
+String filePath = args[2]; // path of file {name}
+String token = args[3]; // Input token
+String history = args[4].trim(); // Input history
 StringBuilder sb = new StringBuilder();
-for(int i = 0; i < his.length; i++){
-   sb.append(his[i]);
-   if(i != his.length - 1)
-    sb.append(" ");
-}
-String history = sb.toString();
 
-ArrayList<String> lines = readFile(filePath);
-ArrayList<String> line = putTokens(lines);
-HashMap<String, Integer> counts = getCounts(line, n);
-printResults(counts, n, k, part, token, history);
+ArrayList<String> lines = readFile(filePath); //reads file for corpus
+ArrayList<String> line = putTokens(lines); // puts tokens on lines
+HashMap<String, Integer> counts = getCounts(line, n); // this is the method that returns counts as a hashmap
+printResults(counts, n, k, part, token, history); // this method is the driver function for printing results
 }
 
 /*
@@ -52,19 +47,20 @@ printResults(counts, n, k, part, token, history);
 * String hist: The history for which we are calculating n-gram for a token
 */
 public static void printResults(HashMap<String, Integer> counts,int n, int k, int part, String token, String hist){
-  String a = "default";
   PriorityQueue<String> top = getPQ(1, counts);
   PriorityQueue<String> topbi = getPQ(2, counts);
-  PriorityQueue<String> topn = getPQ(3, counts);
-  if(part == 1)
+  PriorityQueue<String> topn = getPQ(n, counts);
+  int x = top.size();
+  if(part == 1){
     questionOne(top, topbi, topn, counts, k);
-
+    return;
+  }
   //Question 2.2 starts from here
+  if(part == 2){
   double g = calculateNGRAM(token, hist, n, counts);
-  System.out.println("2.2: "n+" gram probability for token and history : "+ g );
-
-  printConditionalProbabilities(counts, topbi, topn, part, k); //for 2.2, 2.3, and 2.4
-
+  System.out.println("2.2: "+(n+1)+" gram probability for token and history : "+ g );}
+  if(part == 2 || part ==3 || part == 4)
+    printConditionalProbabilities(counts, topbi, topn, part, k, x); //for 2.2, 2.3, and 2.4
 }
 
 
@@ -88,7 +84,7 @@ public static ArrayList<String> readFile(String path){
       lines.add(line);
     }
 }
-  catch(Exception e){ System.out.print(" File not found/IOExcetption. Please run the program with a correct file path. Please ignore any other output in thus run");}
+  catch(Exception e){ System.out.print(" File not found/ IOExcetption. Please run the program with a correct file path. Please ignore any other output in thus run");}
   return lines;
 }
 
@@ -193,13 +189,19 @@ private static PriorityQueue<String> getPQ(int n, HashMap<String,Integer> counts
   for(Map.Entry<String, Integer> x: counts.entrySet()){ //iterating through map to put things into priority queue
      String s = x.getKey();
      String m[] = s.split(" ");
-     if(m.length == n)
+     if(m.length == n) // if length == to n we are looking for, put in PQ
       top.offer(x.getKey());
    }
    return top;
 }
 
-
+/* Does question one: Returns top unigrams, bigrams, and n grams based on input n
+* Input: PriorityQueue<String> top : contains all unigrams in descending order of counts
+* PriorityQueue<String> topbi: contains all bigrams in descending order of counts
+* PriorityQueue<String> topbi: contains all ngrams in descending order of counts
+* HashMap<String, Integer> counts: stores the counts of all tokens in n-forms(uni, bi, etc.)
+* int k: number of items to print from PQs
+*/
 private static void questionOne(PriorityQueue<String> top, PriorityQueue<String> topbi, PriorityQueue<String> topn, HashMap<String, Integer> counts, int k){
   String a = " ";
   System.out.println("2.1 unigrams counts : ");
@@ -212,7 +214,7 @@ private static void questionOne(PriorityQueue<String> top, PriorityQueue<String>
     a = topbi.poll(); // using PriorityQueue to get top k elements efficiently
     System.out.println("Word: "+a+" Count: "+counts.get(a.trim()));
   }
-  System.out.println("2.1 ngrams counts : ");
+  System.out.println("2.1 ngrams counts based on the input n : ");
   for(int i = 0 ; i < k; i++){
     a = topn.poll(); // using PriorityQueue to get top k elements efficiently
     System.out.println("Word: "+a+" Count: "+counts.get(a.trim()));
@@ -220,41 +222,46 @@ private static void questionOne(PriorityQueue<String> top, PriorityQueue<String>
 
 }
 
-
-private static void printConditionalProbabilities(HashMap<String, Integer> counts, PriorityQueue<String> topbi,PriorityQueue<String> topn, int part, int k){
-  HashMap<String, Double> probability = new HashMap<>();
-  PriorityQueue<String> pq = new PriorityQueue((a1,a2)-> (probability.get(a2) > probability.get(a1)) ? 1 : -1);
+/*Prints top 10 conditional probabilities, for unigrams, bigrams, and n grams
+* Input:
+* HashMap<String, Integer> counts: stores the counts of all tokens in n-forms(uni, bi, etc.)
+* PriorityQueue<String> topbi : it contains 2 word sequences, sorted by frequency in descending order
+* PriorityQueue<String> topn : it contains n word sequences, sorted by frequency in descending order
+* int part: question number to solve
+* int k : top k elements to prints
+* int x : number of unigrams
+*/
+private static void printConditionalProbabilities(HashMap<String, Integer> counts, PriorityQueue<String> topbi,PriorityQueue<String> topn, int part, int k, int x){
+  HashMap<String, Double> probability = new HashMap<>(); // to store conditional probabilities as key and proability as value
+  PriorityQueue<String> pq = new PriorityQueue((a1,a2)-> (probability.get(a2) > probability.get(a1)) ? 1 : -1); // priority queue that
   String c, b = " ";
   String a = " ";
   int e,h; //used to store counts
   double g,prob = 0;
 
-  for(int i = 0; (topbi.size() != 0); i++){
+  for(int i = 0; (topbi.size() != 0); i++){ // for bigrams
     c = topbi.poll().trim();
-    System.out.println("String : "+c);
     if(c != null){
      a = c.trim().split(" ")[0];
      b = c.trim().split(" ")[1];
    }
-    e = counts.getOrDefault(c, 0);
-    h = counts.getOrDefault(a, 0);
+    e = counts.getOrDefault(c, 0); // count (A and B)
+    h = counts.getOrDefault(a, 0); // count (B)
     if(part == 2 || part == 4)
-     prob = Math.log(e) - Math.log(h);
-    if(part == 3)
-     prob = Math.log((e)+1) - Math.log((h)+counts.size());
-
+     prob = Math.log(e) - Math.log(h); // P(A and B) / P(B)
+    if(part == 3) // smoothed probabilities
+     prob = Math.log((e)+1) - Math.log((h) + x);
     if( (part == 2 || part == 4) && (e == 0 || h == 0))
      System.out.println((i+1)+"th conditional probability: Undefined");
     else{
      String p = "for P( "+b+" | "+a+ " )";
      probability.put(p, prob);
-     pq.offer(p);
+     pq.offer(p); //putting probabilities into priorirty queue;
    }
   }
   for(int i = 0 ; (i < k) && (topn.size() != 0); i++){
     a = pq.poll();
-    System.out.println( (i+1)+"th bigram probability for "+a+ " is : "+ probability.get(a));
+    System.out.println( (i+1)+"th bigram probability for "+a+ " is : "+ probability.get(a)); //getting top k conditional probabilities
   }
 }
-
 }
