@@ -7,7 +7,9 @@ to compile : javac ngrams.java
 
 to execute : java ngrams.java arg[0] arg[1] arg[2] arg[3] arg[4] arg[5]
 
-Where: arg[0] : The part of the question you want answered. Valid options : 1,2,3,4
+Where: 
+
+       arg[0] : The part of the question you want answered. Valid options : 1,2,3,4
 
        arg[1] : int k, where k specifies the top k unigrams/bigrams/ngrams/conditional probabilities to return
        
@@ -19,6 +21,13 @@ Where: arg[0] : The part of the question you want answered. Valid options : 1,2,
        
        arg[5] : String History, please follow the correct way to input this, anything entered in this argument must start with a " quotation marks and end with                     quotation marks. Example usage: "My name is Sam."
        
- Design choices: 1. The input string History is treated as one sentence, and hence only has one set of start of line and end of line tokens. A future improvement                       would be to allow for multiple sentences in the history.
+Specific Design choices: 
+ 
+       1. The input string History is treated as one sentence, and hence only has one set of start of line and end of line tokens. A future improvement                       would be to allow for multiple sentences in the history.
+ 
+       2. The top k conditional probabilities prints undefined if either the numerator or denominator is 0 because we are using ln(x) probabilities.
+       
+       3. The conditional probability for the token given history returns Postitive Infinity if either the numerator or denominator is 0, because we are using ln(x)
+          probabilities.
  
                 
