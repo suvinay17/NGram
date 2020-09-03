@@ -34,6 +34,7 @@ for(int i = 0; i < his.length; i++){
     sb.append(" ");
 }
 String history = sb.toString();
+System.out.println(history);
 
 ArrayList<String> lines = readFile(filePath);
 ArrayList<String> line = putTokens(lines);
@@ -76,11 +77,32 @@ public static void printResults(HashMap<String, Integer> counts,int n, int k, in
        System.out.println("Word: "+a+" Count: "+counts.get(a));
      }
    }
-
+   String c;
+   a = "default";
+   String b = "default";
+   int e,h; //used to store counts
    double g = 0;
    if(part == 2 || part == 3){
-     g = calculateNGRAM(token, hist, n, 1.0, counts);
-     System.out.println(n+" gram probability : "+ g );
+     g = calculateNGRAM(token, hist, n, counts);
+     int f = 0;
+     System.out.println(n+" gram probability for token and history : "+ g );
+     for(int i = 0; i < k; i++){
+       f++;
+       c = topbi.poll().trim();
+       if(c != null){
+        a = c.trim().split(" ")[0];
+        b = c.trim().split(" ")[1];
+      }
+       e = counts.getOrDefault(c, 0);
+       // System.out.println("Numerator"+c+" :"+ e);  //Test
+       h = counts.getOrDefault(b, 0);
+       // System.out.println("Denominator"+b+" :"+ h); //Test
+       prob = Math.log(e) - Math.log(h);
+       if(g == 0 || h == 0)
+        System.out.println(f+"th conditional probability: Undefined");
+       else
+        System.out.println(f+"th conditional probability: "+prob+ "for P( "+a+" | "+b+ " )");
+     }
     }
 
   }
@@ -171,22 +193,31 @@ public static HashMap<String, Integer> getCounts(ArrayList<String> lines, int n)
 * Input:
 * String hist : contains the history of the token
 * int n : n in ngrams
-* double prob: stores the ngram probability of that tokens
 * HashMap<String, Integer> counts : stores the counts of each token or merged tokens(String) based on n(Integer)gram model
 * Returns : double prob the ngram probability of the token given the history
 */
-private static double calculateNGRAM(String hist, String token, int n, double prob, HashMap<String, Integer> counts){
+private static double calculateNGRAM(String token, String hist, int n, HashMap<String, Integer> counts){
       hist = hist.trim(); //cleaning up for edge cases
+      System.out.println("Hist: "+hist);
       String history[] = hist.split(" "); //split tokens based on space
       StringBuilder sb = new StringBuilder(); // StringBuilder for efficient concatenation
-      for(int i = history.length - n; (i >= 0) && (i < history.length); i--){
+      for(int i = history.length - n; (i >= 0) && (i < history.length); i++){
         sb.append(history[i]);
+        if(i != history.length - 1)
         sb.append(" ");
       }
-      int a = counts.getOrDefault(token,0);
+      String s = sb.toString().trim();
+      //System.out.println("Denominator :"+s);
+      sb.append(" ");
+      sb.append(token.trim());
+      //System.out.println("Numerator :"+sb.toString());
+      int a = counts.getOrDefault(s,0);
+      //System.out.println("a: "+a);
       int b = counts.getOrDefault(sb.toString().trim(), 0);
+      //System.out.println("b: "+b);
+      //System.out.println(counts.get("I am Sam"));
       if(a == 0 || b == 0) return 0;
-      return Math.log(counts.getOrDefault(token,0)/(counts.getOrDefault(sb.toString().trim(), 0)));
+      return Math.log(b) - Math.log(a);
     }
 
 }
