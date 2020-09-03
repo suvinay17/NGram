@@ -1,4 +1,4 @@
-/* Class written by Suvinay Bothra on August 28th to compute ngram probabilities to 
+/* Class written by Suvinay Bothra on August 28th to compute ngram probabilities to
 * Assignment for cmsc395 (NLP) by Dr. Park
 */
 import java.util.ArrayList;
@@ -121,7 +121,6 @@ public static HashMap<String, Integer> getCounts(ArrayList<String> lines, int n)
   String x;
   int b = 0;
   for(String line: lines){
-    System.out.println(line);
     String[] words = line.split(" ");
     for(int i = 0; i < words.length; i++){
       words[i] = words[i].trim();
@@ -154,7 +153,6 @@ public static HashMap<String, Integer> getCounts(ArrayList<String> lines, int n)
 */
 private static double calculateNGRAM(String token, String hist, int n, HashMap<String, Integer> counts){
       hist = hist.trim(); //cleaning up for edge cases
-      System.out.println("Hist: "+hist);
       String history[] = hist.split(" "); //split tokens based on space
       StringBuilder sb = new StringBuilder(); // StringBuilder for efficient concatenation
       for(int i = history.length - n; (i >= 0) && (i < history.length); i++){
