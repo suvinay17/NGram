@@ -18,4 +18,7 @@ Where: arg[0] : The part of the question you want answered. Valid options : 1,2,
        arg[4] : String Token, the input token that you want to look for when calculating n-1 gram probability with history. eg: Sam
        
        arg[5] : String History, please follow the correct way to input this, anything entered in this argument must start with a " quotation marks and end with                     quotation marks. Example usage: "My name is Sam."
+       
+ Design choices: 1. The input string History is treated as one sentence, and hence only has one set of start of line and end of line tokens. A future improvement                       would be to allow for multiple sentences in the history.
+ 
                 
